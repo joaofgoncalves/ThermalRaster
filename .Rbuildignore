@@ -1,0 +1,5 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^_test_
+R/_test_main.R
+^ThermalRaster_Logo$
