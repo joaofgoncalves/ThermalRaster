@@ -1,6 +1,6 @@
 # ThermalRaster
 
-![](man/logo/ThermalRaster_Logo_250.png){width="165"}
+![](man/logo/ThermalRaster_Logo_250.png)
 
 ## Package description
 
