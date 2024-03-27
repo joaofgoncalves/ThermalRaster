@@ -15,9 +15,10 @@ Description: The package is designed to enhance the processing and
     SpatRaster objects compatible with the terra package, enabling to
     profit from this package features/toolkit. Using RGB images, it is
     possible to generate synthetic/predicted thermal images for the
-    cropped or full RGB images.  The package also enables the handling of
-    JSON annotations/masks from Roboflow (https://roboflow.com), enabling
-    the extraction of ROIs from the images for further analysis, making
+    cropped or full RGB images via Deep Learning or Random Forests
+    algorithms. The package also enables the handling of JSON
+    annotations/masks from Roboflow (https://roboflow.com), enabling the
+    extraction of ROIs from the images for further analysis, making
     possible assess, analyze and model fine-scale thermal variation in
     micro-habitats (i.e., TReMs - Tree Related Micro-habitats). Roboflow's
     advantages include improved ROI digitization using manual or the SAM

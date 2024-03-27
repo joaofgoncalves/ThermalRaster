@@ -3,3 +3,5 @@
 ^_test_
 R/_test_main.R
 ^ThermalRaster_Logo$
+^README\.Rmd$
+^README_files$
