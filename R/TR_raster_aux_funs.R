@@ -117,7 +117,7 @@ plot_temp_rast <- function(rst, palette = "magma",scale_temp = NULL, ...){
   if(palette == "heat")
     temp_palette <- colorRampPalette(heat.colors(12))(100)
 
-  if(!is.null(scale_temp)){
+  if(is.null(scale_temp)){
     terra::plot(rst, col = temp_palette, ...)
   }else{
     terra::plot(rst / scale_temp, col = temp_palette, ...)
