@@ -25,7 +25,8 @@ Description: The package is designed to enhance the processing and
     (Facebook's Segment Anything) algorithm. ROI's can also be generated
     with the terra package as SpatVector objects. EXIFtool
     (https://exiftool.org/) is broadly used for retrieving metadata from
-    FLIR imagery.
+    FLIR imagery and the ThermImage package to convert from raw to 
+    temperature.
 License: GPL-3
 Imports: 
     caret,
