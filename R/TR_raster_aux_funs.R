@@ -15,6 +15,7 @@
 #'             Values below this percentile will be set to NA. Defaults to 5.
 #' @param pmax The upper percentile used to define the upper threshold for outliers.
 #'             Values above this percentile will be set to NA. Defaults to 95.
+#' @param na.rm Remove NA's (default TRUE)
 #'
 #' @return A SpatRaster object similar to the input but with values outside the
 #'         specified percentile thresholds set to NA.
@@ -25,10 +26,10 @@
 #' @export
 #'
 
-remove_outliers <- function(rast,  pmin = 5, pmax = 100){
+remove_outliers <- function(rast,  pmin = 5, pmax = 100, na.rm=TRUE){
 
   tv <- terra::values(rast)
-  qts <- quantile(tv, probs = c(pmin / 100, pmax / 100))
+  qts <- quantile(tv, probs = c(pmin / 100, pmax / 100),na.rm=na.rm)
 
   tv[(tv < qts[1]) | tv > qts[2]] <- NA
   temp_c <- rast
