@@ -4,7 +4,7 @@
 \alias{remove_outliers}
 \title{Remove outliers from a SpatRaster based on percentile thresholds}
 \usage{
-remove_outliers(rast, pmin = 5, pmax = 100)
+remove_outliers(rast, pmin = 5, pmax = 100, na.rm = TRUE)
 }
 \arguments{
 \item{rast}{A SpatRaster object from which outliers will be removed.}
@@ -14,6 +14,8 @@ Values below this percentile will be set to NA. Defaults to 5.}
 
 \item{pmax}{The upper percentile used to define the upper threshold for outliers.
 Values above this percentile will be set to NA. Defaults to 95.}
+
+\item{na.rm}{Remove NA's (default TRUE)}
 }
 \value{
 A SpatRaster object similar to the input but with values outside the
