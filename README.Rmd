@@ -69,19 +69,22 @@ Now let's check the full RGB image that is contained in FLIR's metadata:
 
 ```{r plot-full-rgb}
 
-rgb_hr <- flir_rgb_to_rast(image_path, exiftool_path, crop=FALSE)
+rgb_hr <- flir_rgb_to_rast(image_path, exiftool_path, crop = FALSE)
 
-plotRGB(rgb_hr)
+print(rgb_hr)
+
+plotRGB(rgb_hr, main = "Full RGB (1440x1080")
 
 ```
 
-And now the cropped RGB which matches the extent and resolution of thermal image:
+And now the cropped RGB which matches the size and resolution of thermal image 
+(i.e., 640x480):
 
 ```{r plot-crop-rgb}
 
-rgb_lr <- flir_rgb_to_rast(image_path, exiftool_path, crop=TRUE)
+rgb_lr <- flir_rgb_to_rast(image_path, exiftool_path, crop = TRUE)
 
-plotRGB(rgb_lr)
+plotRGB(rgb_lr, main = "Cropped RGB (640x480)")
 
 ```
 
@@ -89,9 +92,9 @@ We can see that the second image is narrower and closer to the tree trunk (focus
 
 ## Working with thermal data
 
-Start by extract the thermal data (in degrees Celsius):
+Start by extracting the thermal data (in degrees Celsius):
 
-```{r raw-to-thermal}
+```{r raw-to-thermal-print}
 
 temp <- flir_raw_to_thermal(image_path, exiftool_path)
 
@@ -99,7 +102,11 @@ print(temp)
 
 summary(temp)
 
-plot_temp_rast(temp, palette="magma")
+
+par(mfrow=c(1, 2))
+plot_temp_rast(temp, palette = "magma", main = "Thermal cropped")
+plotRGB(rgb_lr, main = "RGB cropped")
+
 
 ```
 
@@ -109,9 +116,9 @@ We will convert values lower than the 3.5% percentile to `NA` and keep all the r
 
 ```{r thermal-rm-outliers-plot}
 
-temp_out_rm <- remove_outliers(temp, pmin = 3.5, pmax=100)
+temp_out_rm <- remove_outliers(temp, pmin = 3.5, pmax = 100)
 
-plot_temp_rast(temp_out_rm, palette="magma")
+plot_temp_rast(temp_out_rm, palette = "magma")
 
 ```
 
@@ -125,7 +132,7 @@ plot_temp_rast(temp_out_rm, palette="Spectral")
 
 ```
 
-## Generating synthetic/predicted thermal images
+## Generating synthetic or predicted thermal images
 
 The `ThermalRaster` package currently provides methods to generate **synthetic or predicted 
 thermal data**. This enables to gain more detail into the fine-scale variation of surface 
@@ -204,14 +211,17 @@ plot_temp_rast(pred_term_full_outlrm, palette = "magma", main="Synthetic/predict
 
 ```
 
+Notice how the RF model can reasonably predict the temperature of pixels fully outside 
+of the training sample/conditions!
 
 
-## Working with regions-of-interest in the image (ROI)
+
+## Working with regions-of-interest ROIs
 
 Basically there are two ways to currently 
 
 
-### Drawing ROIs with the `terra` package
+### Drawing ROIs with the terra package
 
 The objective of this demo is to check the distribution of temperature values between 
 different micro-habitats in the tree bole (the bark and one cavity). To do this we will 
@@ -273,7 +283,7 @@ writeVector(tree_samps, filename = "./inst/extdata/QUEROB1_EINBRGB_BWWG4662_ROIs
 ```
 
 Now let's compare the distribution of temperature values for the bark and the 
-cavity:
+cavity for an oak tree:
 
 ```{r analyze-oak-sample-data}
 
@@ -310,7 +320,7 @@ ext_values %>%
 
 ```
 
-Now for a different image:
+Now let's use a different image, this time for beech tree:
 
 ```{r analyze-beech-data, message=FALSE, warning=FALSE}
 
@@ -355,7 +365,7 @@ beech_ext_values %>%
 ```
 
 
-Make a plot comparing the two distributions:
+Make a plot comparing the distributions for the two tree micro-habitats:
 
 
 ```{r}
@@ -363,6 +373,7 @@ Make a plot comparing the two distributions:
 g1 <- ggplot(ext_values, aes(x=temp_c, fill=type)) + 
       geom_density(alpha=0.5) + 
       xlab(expression("Temperature " ( degree*C))) +
+      ylab("Density") + 
       theme_bw() + 
       labs(title = "Oak") + 
       theme(text=element_text(size=16))
@@ -377,6 +388,7 @@ g2 <- ggplot(beech_ext_values, aes(x=temp_c, fill=type)) +
       geom_density(alpha=0.5) + 
       labs(title = "Beech") + 
       xlab(expression("Temperature " ( degree*C))) + 
+      ylab("Density") + 
       theme_bw() + 
       theme(text=element_text(size=16))
 
