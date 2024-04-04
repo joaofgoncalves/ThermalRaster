@@ -1,0 +1,9 @@
+url: ~
+template:
+  bootstrap: 5
+  bslib:
+    bg: "#ffffff"
+    fg: "#202123"
+    primary: "#16181a"
+    base_font: {google: "Roboto"}
+
