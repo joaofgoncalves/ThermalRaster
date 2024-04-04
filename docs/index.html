@@ -115,7 +115,7 @@
 <a href="#working-with-regions-of-interest-rois">Working with regions-of-interest ROIs</a>
 <ul>
 <li><a href="#drawing-rois-with-the-terra-package">Drawing ROIs with the terra package</a></li>
-<li><a href="#drawing-rois-with-the-roboflow">Drawing ROIs with the Roboflow</a></li>
+<li><a href="#drawing-rois-with-roboflow-app">Drawing ROIs with Roboflow app</a></li>
 </ul>
 </li>
 </ul>
@@ -256,9 +256,10 @@
 <span id="cb15-11"><a href="#cb15-11" tabindex="-1"></a><span class="do">## |-&gt; Calculating features for the high-resolution RGB image ...</span></span>
 <span id="cb15-12"><a href="#cb15-12" tabindex="-1"></a><span class="do">## Done.</span></span>
 <span id="cb15-13"><a href="#cb15-13" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb15-14"><a href="#cb15-14" tabindex="-1"></a><span class="do">## Predicting.. Progress: 46%. Estimated remaining time: 35 seconds.</span></span>
-<span id="cb15-15"><a href="#cb15-15" tabindex="-1"></a><span class="do">## Done.</span></span>
-<span id="cb15-16"><a href="#cb15-16" tabindex="-1"></a><span class="do">## [Run Time: 2 minutes 16 seconds ]</span></span></code></pre></div>
+<span id="cb15-14"><a href="#cb15-14" tabindex="-1"></a><span class="do">## Predicting.. Progress: 58%. Estimated remaining time: 22 seconds.</span></span>
+<span id="cb15-15"><a href="#cb15-15" tabindex="-1"></a><span class="do">## Predicting.. Progress: 97%. Estimated remaining time: 2 seconds.</span></span>
+<span id="cb15-16"><a href="#cb15-16" tabindex="-1"></a><span class="do">## Done.</span></span>
+<span id="cb15-17"><a href="#cb15-17" tabindex="-1"></a><span class="do">## [Run Time: 2 minutes 35 seconds ]</span></span></code></pre></div>
 <p>Let’s check the RF model output:</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">rf_sup_res</span><span class="op">$</span><span class="va">rf_mod</span><span class="op">)</span></span></code></pre></div>
@@ -275,8 +276,8 @@
 <span id="cb17-11"><a href="#cb17-11" tabindex="-1"></a><span class="do">## Target node size:                 5 </span></span>
 <span id="cb17-12"><a href="#cb17-12" tabindex="-1"></a><span class="do">## Variable importance mode:         none </span></span>
 <span id="cb17-13"><a href="#cb17-13" tabindex="-1"></a><span class="do">## Splitrule:                        variance </span></span>
-<span id="cb17-14"><a href="#cb17-14" tabindex="-1"></a><span class="do">## OOB prediction error (MSE):       23.22192 </span></span>
-<span id="cb17-15"><a href="#cb17-15" tabindex="-1"></a><span class="do">## R squared (OOB):                  0.7109125</span></span></code></pre></div>
+<span id="cb17-14"><a href="#cb17-14" tabindex="-1"></a><span class="do">## OOB prediction error (MSE):       22.07124 </span></span>
+<span id="cb17-15"><a href="#cb17-15" tabindex="-1"></a><span class="do">## R squared (OOB):                  0.715415</span></span></code></pre></div>
 <p>Now, let’s plot the predicted image considering the train/cropped RGB (with outliers removed: &lt; 3.5% percentile):</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_term_train_outlrm</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/remove_outliers.html">remove_outliers</a></span><span class="op">(</span><span class="va">rf_sup_res</span><span class="op">$</span><span class="va">pred_temp_train</span>, pmin <span class="op">=</span> <span class="fl">3.5</span><span class="op">)</span></span>
@@ -493,12 +494,12 @@
 <hr>
 </div>
 <div class="section level3">
-<h3 id="drawing-rois-with-the-roboflow">Drawing ROIs with the Roboflow<a class="anchor" aria-label="anchor" href="#drawing-rois-with-the-roboflow"></a>
+<h3 id="drawing-rois-with-roboflow-app">Drawing ROIs with Roboflow app<a class="anchor" aria-label="anchor" href="#drawing-rois-with-roboflow-app"></a>
 </h3>
 <p>Roboflow is a development platform that simplifies the process of building and deploying computer vision models. It offers a range of tools designed to assist developers in preparing, creating, and managing data sets needed for training machine learning models, with a particular emphasis on image recognition tasks.</p>
-<p>In this context we will use Roboflow’s features to generate ROI’s of micro-habitats to showcase its main functions. A <a href="vignettes/Protocol_for_annotating_thermal_images_using_Roboflow_app.pdf">tutorial/vignette</a> on this issue is provided here with much more details on how to collect ROI’s using Roboflow.</p>
-<figure><img src="reference/figures/Roboflow_app_01.png" alt="Examples of Roboflow annotations on tree micro-habitats. Notice the detailed contours that this tool is capable of capturing."><figcaption aria-hidden="true">
-Examples of Roboflow annotations on tree micro-habitats. Notice the detailed contours that this tool is capable of capturing.
+<p>In this context we will use Roboflow to generate ROI’s of micro-habitats to showcase their thermal variability. A tutorial/vignette on how to create ROI masks with Roboflow is provided in this <a href="vignettes/Protocol_for_annotating_thermal_images_using_Roboflow_app.pdf">link</a>.</p>
+<figure><img src="reference/figures/Roboflow_app_01.png" alt="Examples of Roboflow annotations on tree structures/micro-habitats. Notice the detailed contours that Roboflow semi-automated tools are capable of capturing."><figcaption aria-hidden="true">
+Examples of Roboflow annotations on tree structures/micro-habitats. Notice the detailed contours that Roboflow semi-automated tools are capable of capturing.
 </figcaption></figure><p>In a nutshell, there are two main ways of making ROI’s in Roboflow:</p>
 <ul>
 <li>
@@ -511,7 +512,7 @@ Examples of Roboflow annotations on tree micro-habitats. Notice the detailed con
 </li>
 </ul>
 <p><u><strong>Note</strong></u>: polygons cannot have “holes” or “islands”. This set of tools for annotation in Roboflow app cannot handle such representations.</p>
-<p>Roboflow annotations are recorded into a specific JSON format. <code>ThermalRaster</code> can use these data stored as JSON files and convert them into <code>sf</code> objects compatible with raster data from the <code>terra</code> package.</p>
+<p>Roboflow annotations are recorded into a specific JSON format. <code>ThermalRaster</code> can use these data stored as JSON files and convert them into spatial objects (i.e., <code>SpatVector</code>) compatible with raster data from the <code>terra</code> package. This enables the use of terra’s <code>extract</code> function to get the pixel values inside the ROI and analyze them further.</p>
 <figure><img src="reference/figures/Roboflow_interface.png" alt="Roboflow interface with the annotations/ROI’s in JSON format in the bottom left corner. In this case an oak tree canopy is displayed in the sample."><figcaption aria-hidden="true">
 Roboflow interface with the annotations/ROI’s in JSON format in the bottom left corner. In this case an oak tree canopy is displayed in the sample.
 </figcaption></figure><div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
@@ -527,7 +528,7 @@ Roboflow interface with the annotations/ROI’s in JSON format in the bottom lef
 <div class="sourceCode" id="cb29"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" tabindex="-1"></a><span class="do">##      type  label        x        y     width    height</span></span>
 <span id="cb29-2"><a href="#cb29-2" tabindex="-1"></a><span class="do">## 1 polygon cavity 646.8750 831.7969  455.6250 1213.5938</span></span>
 <span id="cb29-3"><a href="#cb29-3" tabindex="-1"></a><span class="do">## 2 polygon   bole 532.9688 720.0000 1054.6875 1440.0000</span></span></code></pre></div>
-<p>To convert Roboflow annotations into <code>sf</code> polygons actually usable with <code>ThermalRaster</code> is simple. In this example, the ROIs were collected in Roboflow from FLIR’s thumbnail image — which has a size of 1440 x 1080 pixels — however, we want to convert those annotations into the dimensions of the thermal image (which is 640 x 480) hence with a scale factor of 2.25 (i.e., f = 1440 / 640). In the first step (<code>get_roboflow_masks)</code> we generate all the masks from the JSON file and, in the second <code>simplify_roboflow_masks</code>, we aggregate/simplify the masks by label/category.</p>
+<p>To convert Roboflow annotations into <code>SpatVector</code> polygons usable with <code>ThermalRaster</code> is simple. In this example, the ROIs were collected in Roboflow from FLIR’s thumbnail image — which has a size of 1440 x 1080 pixels — however, we want to convert those annotations into the dimensions of the thermal image (which is 640 x 480) hence with a scale factor of 2.25 (i.e., f = 1440 / 640). In the first step (<code>get_roboflow_masks)</code> we generate all the masks from the JSON file and, in the second step <code>simplify_roboflow_masks</code>, we aggregate/simplify the masks by label/category.</p>
 <div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Make ROI masks from a json file generated in Roboflow app</span></span>
 <span><span class="va">robo_masks</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/get_roboflow_masks.html">get_roboflow_masks</a></span><span class="op">(</span>path <span class="op">=</span> <span class="va">robo_rois_path</span>, </span>
@@ -586,22 +587,30 @@ Roboflow interface with the annotations/ROI’s in JSON format in the bottom lef
 <span id="cb31-45"><a href="#cb31-45" tabindex="-1"></a><span class="do">## name        : layer </span></span>
 <span id="cb31-46"><a href="#cb31-46" tabindex="-1"></a><span class="do">## min value   :     1 </span></span>
 <span id="cb31-47"><a href="#cb31-47" tabindex="-1"></a><span class="do">## max value   :     1</span></span></code></pre></div>
-<p><u><strong>Note</strong></u>: Re-scaling annotations is not needed if the size of the RGB and thermal images is exactly the same (which happens for “cropped” images as shown in the examples before).</p>
-<p>The output of is a list containing three elements:</p>
+<p><u><strong>Note</strong></u>: Re-scaling annotations is not needed if the size of the RGB and the thermal image is exactly the same (which happens in most cases for “cropped” images as shown in the examples before).</p>
+<p>The output of the “get” and “simplify” functions above is a list containing three elements:</p>
 <ul>
 <li><p><code>labs</code> with the labels of the ROI polygons,</p></li>
 <li><p><code>pol_masks</code> with the ROIs as <code>SpatVector</code> polygon objects, and</p></li>
 <li><p><code>rst_masks</code> with the ROIs as <code>SpatRaster</code>.</p></li>
 </ul>
-<p>After applying the simplifying step we get a list similar in structure to the input but with all masks of the same label aggregated together. Each label will correspond to a single polygon mask and a single raster mask for each category, with the latter indicating presence (1 or TRUE) or absence (<code>NA</code>) of the label at each pixel.</p>
+<p>After applying the simplify step, we get a list similar in structure to the input but with all masks of the same label aggregated together. Each label will correspond to a single polygon mask and a single raster mask for each category, with the latter indicating presence (1 or TRUE) or absence (<code>NA</code>) of the label at each pixel.</p>
 <div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plotRGB.html" class="external-link">plotRGB</a></span><span class="op">(</span><span class="va">rgb_lr</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">robo_masks_simple</span><span class="op">$</span><span class="va">rst_masks</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, col<span class="op">=</span><span class="st">"blue"</span>, alpha<span class="op">=</span><span class="fl">0.3</span>, </span>
 <span>     add<span class="op">=</span><span class="cn">TRUE</span>, legend<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/legend.html" class="external-link">legend</a></span><span class="op">(</span><span class="st">"topright"</span>, legend <span class="op">=</span> <span class="st">"cavity"</span>, pch <span class="op">=</span> <span class="fl">20</span>, xpd<span class="op">=</span><span class="cn">NA</span>, bg<span class="op">=</span><span class="st">"white"</span>, </span>
-<span>       col<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"blue"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="README_files/figure-gfm/plot-roboflow-rois-1.png"><!-- --></p>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/legend.html" class="external-link">legend</a></span><span class="op">(</span><span class="st">"topright"</span>, legend <span class="op">=</span> <span class="va">robo_masks_simple</span><span class="op">$</span><span class="va">labs</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, </span>
+<span>       pch <span class="op">=</span> <span class="fl">20</span>, xpd<span class="op">=</span><span class="cn">NA</span>, bg<span class="op">=</span><span class="st">"white"</span>, col<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"blue"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p><img src="README_files/figure-gfm/plot-roboflow-roi-1-1.png"><!-- --></p>
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plotRGB.html" class="external-link">plotRGB</a></span><span class="op">(</span><span class="va">rgb_lr</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">robo_masks_simple</span><span class="op">$</span><span class="va">rst_masks</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span>, col<span class="op">=</span><span class="st">"red"</span>, alpha<span class="op">=</span><span class="fl">0.3</span>, </span>
+<span>     add<span class="op">=</span><span class="cn">TRUE</span>, legend<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/legend.html" class="external-link">legend</a></span><span class="op">(</span><span class="st">"topright"</span>, legend <span class="op">=</span> <span class="va">robo_masks_simple</span><span class="op">$</span><span class="va">labs</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span>, </span>
+<span>       pch <span class="op">=</span> <span class="fl">20</span>, xpd<span class="op">=</span><span class="cn">NA</span>, bg<span class="op">=</span><span class="st">"white"</span>, col<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"red"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p><img src="README_files/figure-gfm/plot-roboflow-roi-2-1.png"><!-- --></p>
 </div>
 </div>
 </div>
