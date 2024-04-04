@@ -227,11 +227,11 @@
 <div class="section level2">
 <h2 id="generating-synthetic-or-predicted-thermal-images">Generating synthetic or predicted thermal images<a class="anchor" aria-label="anchor" href="#generating-synthetic-or-predicted-thermal-images"></a>
 </h2>
-<p>The <code>ThermalRaster</code> package currently provides methods to generate <strong>synthetic or predicted thermal data</strong>. This enables to gain more detail into the fine-scale variation of surface temperature for inspecting/visualizing structures and micro-habitats.</p>
-<p>To achieve this, we use the overlap between the “low-resolution” thermal imagery — i.e., as the target or response variable — with the “high-resolution” RGB cropped image — i.e., predictors or features, based on color and texture — to train a Random Forest or Deep Learning model.</p>
+<p>The <code>ThermalRaster</code> package currently provides methods to generate <strong>synthetic or predicted thermal data</strong>. This enables to gain more detail into the fine-scale variation of surface temperature for inspecting/visualizing certain structures and/or micro-habitats.</p>
+<p>To achieve this, we use the overlap between the “low-resolution” thermal imagery — i.e., as the target or response variable — with the “high-resolution” RGB cropped image — i.e., as the predictors or features, mainly based on color and texture — to train a Random Forest or Deep Learning model.</p>
 <p>Because generalization across images is highly “challenging”, to implement these methods we need to train the model every time. This also means different levels of performance or success depending on the objects depicted in the images.</p>
-<p>After training, the model it can be applied onto the images used for training — i.e., the “low-resolution” or cropped RGB images — and also the full RGB image both extracted from the FLIR’s metadata.</p>
-<p>Keep in mind that synthetic/predicted thermal data for the full RGB has limitations since the train region may not include features in this image.</p>
+<p>After training, the model can be applied onto the images used for training — i.e., the “low-resolution” or cropped RGB images — and also the full size RGB image (both extracted from the FLIR’s metadata using the <code>ThermalRaster</code> package).</p>
+<p>Keep in mind that synthetic/predicted thermal data for the full size RGB has limitations since the train region does not include certain parts, objects or features in this bigger image.</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rf_sup_res</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/rf_thermal_from_rgb.html">rf_thermal_from_rgb</a></span><span class="op">(</span></span>
 <span>             rgb_rst <span class="op">=</span> <span class="va">rgb_lr</span>,      <span class="co"># The predictors from cropped/low-res RGB</span></span>
@@ -256,9 +256,9 @@
 <span id="cb15-11"><a href="#cb15-11" tabindex="-1"></a><span class="do">## |-&gt; Calculating features for the high-resolution RGB image ...</span></span>
 <span id="cb15-12"><a href="#cb15-12" tabindex="-1"></a><span class="do">## Done.</span></span>
 <span id="cb15-13"><a href="#cb15-13" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb15-14"><a href="#cb15-14" tabindex="-1"></a><span class="do">## Predicting.. Progress: 75%. Estimated remaining time: 10 seconds.</span></span>
+<span id="cb15-14"><a href="#cb15-14" tabindex="-1"></a><span class="do">## Predicting.. Progress: 46%. Estimated remaining time: 35 seconds.</span></span>
 <span id="cb15-15"><a href="#cb15-15" tabindex="-1"></a><span class="do">## Done.</span></span>
-<span id="cb15-16"><a href="#cb15-16" tabindex="-1"></a><span class="do">## [Run Time: 2 minutes 37 seconds ]</span></span></code></pre></div>
+<span id="cb15-16"><a href="#cb15-16" tabindex="-1"></a><span class="do">## [Run Time: 2 minutes 16 seconds ]</span></span></code></pre></div>
 <p>Let’s check the RF model output:</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">rf_sup_res</span><span class="op">$</span><span class="va">rf_mod</span><span class="op">)</span></span></code></pre></div>
@@ -275,8 +275,8 @@
 <span id="cb17-11"><a href="#cb17-11" tabindex="-1"></a><span class="do">## Target node size:                 5 </span></span>
 <span id="cb17-12"><a href="#cb17-12" tabindex="-1"></a><span class="do">## Variable importance mode:         none </span></span>
 <span id="cb17-13"><a href="#cb17-13" tabindex="-1"></a><span class="do">## Splitrule:                        variance </span></span>
-<span id="cb17-14"><a href="#cb17-14" tabindex="-1"></a><span class="do">## OOB prediction error (MSE):       22.89146 </span></span>
-<span id="cb17-15"><a href="#cb17-15" tabindex="-1"></a><span class="do">## R squared (OOB):                  0.7085754</span></span></code></pre></div>
+<span id="cb17-14"><a href="#cb17-14" tabindex="-1"></a><span class="do">## OOB prediction error (MSE):       23.22192 </span></span>
+<span id="cb17-15"><a href="#cb17-15" tabindex="-1"></a><span class="do">## R squared (OOB):                  0.7109125</span></span></code></pre></div>
 <p>Now, let’s plot the predicted image considering the train/cropped RGB (with outliers removed: &lt; 3.5% percentile):</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pred_term_train_outlrm</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/remove_outliers.html">remove_outliers</a></span><span class="op">(</span><span class="va">rf_sup_res</span><span class="op">$</span><span class="va">pred_temp_train</span>, pmin <span class="op">=</span> <span class="fl">3.5</span><span class="op">)</span></span>
@@ -306,7 +306,8 @@
 <div class="section level2">
 <h2 id="working-with-regions-of-interest-rois">Working with regions-of-interest ROIs<a class="anchor" aria-label="anchor" href="#working-with-regions-of-interest-rois"></a>
 </h2>
-<p>Basically there are two ways to currently</p>
+<p>Regions of Interest (ROIs) — i.e., a subset of the image such as a rectangle or an irregular polygon/shape — are crucial in image analysis for focusing the analysis on specific parts of an image while excluding irrelevant areas. Basically there are two ways to make or delineate ROIs to use with <code>ThermalRaster</code>. The first one is to employ the <code>draw</code> function from the <code>terra</code> package and, the second is to use Roboflow online annotation tool (<a href="https://roboflow.com/" class="external-link uri">https://roboflow.com/</a>). While the first is easier to set up and use, the second is much more powerful (involving semi-automated with state-of-the-art algorithms or manual digitization) especially for irregular or complex shapes; however, the latter involves sharing your image data (part of it at least) and learning how to deploy it.</p>
+<p>Both methods are explained below in detail.</p>
 <div class="section level3">
 <h3 id="drawing-rois-with-the-terra-package">Drawing ROIs with the terra package<a class="anchor" aria-label="anchor" href="#drawing-rois-with-the-terra-package"></a>
 </h3>
@@ -494,7 +495,7 @@
 <div class="section level3">
 <h3 id="drawing-rois-with-the-roboflow">Drawing ROIs with the Roboflow<a class="anchor" aria-label="anchor" href="#drawing-rois-with-the-roboflow"></a>
 </h3>
-<p>Roboflow is a development platform that simplifies the process of building and deploying computer vision models. It offers a range of tools designed to assist developers in preparing, creating, and managing datasets needed for training machine learning models, with a particular emphasis on image recognition tasks.</p>
+<p>Roboflow is a development platform that simplifies the process of building and deploying computer vision models. It offers a range of tools designed to assist developers in preparing, creating, and managing data sets needed for training machine learning models, with a particular emphasis on image recognition tasks.</p>
 <p>In this context we will use Roboflow’s features to generate ROI’s of micro-habitats to showcase its main functions. A <a href="vignettes/Protocol_for_annotating_thermal_images_using_Roboflow_app.pdf">tutorial/vignette</a> on this issue is provided here with much more details on how to collect ROI’s using Roboflow.</p>
 <figure><img src="reference/figures/Roboflow_app_01.png" alt="Examples of Roboflow annotations on tree micro-habitats. Notice the detailed contours that this tool is capable of capturing."><figcaption aria-hidden="true">
 Examples of Roboflow annotations on tree micro-habitats. Notice the detailed contours that this tool is capable of capturing.
@@ -509,7 +510,7 @@ Examples of Roboflow annotations on tree micro-habitats. Notice the detailed con
 <p><img src="reference/figures/RoboFlow_Polygon_tool.png"></p>
 </li>
 </ul>
-<p>ℹ️ <u><strong>Note</strong></u>: polygons cannot have “holes” or “islands”. This set of tools for annotation in Roboflow app cannot handle such representations.</p>
+<p><u><strong>Note</strong></u>: polygons cannot have “holes” or “islands”. This set of tools for annotation in Roboflow app cannot handle such representations.</p>
 <p>Roboflow annotations are recorded into a specific JSON format. <code>ThermalRaster</code> can use these data stored as JSON files and convert them into <code>sf</code> objects compatible with raster data from the <code>terra</code> package.</p>
 <figure><img src="reference/figures/Roboflow_interface.png" alt="Roboflow interface with the annotations/ROI’s in JSON format in the bottom left corner. In this case an oak tree canopy is displayed in the sample."><figcaption aria-hidden="true">
 Roboflow interface with the annotations/ROI’s in JSON format in the bottom left corner. In this case an oak tree canopy is displayed in the sample.
@@ -528,12 +529,13 @@ Roboflow interface with the annotations/ROI’s in JSON format in the bottom lef
 <span id="cb29-3"><a href="#cb29-3" tabindex="-1"></a><span class="do">## 2 polygon   bole 532.9688 720.0000 1054.6875 1440.0000</span></span></code></pre></div>
 <p>To convert Roboflow annotations into <code>sf</code> polygons actually usable with <code>ThermalRaster</code> is simple. In this example, the ROIs were collected in Roboflow from FLIR’s thumbnail image — which has a size of 1440 x 1080 pixels — however, we want to convert those annotations into the dimensions of the thermal image (which is 640 x 480) hence with a scale factor of 2.25 (i.e., f = 1440 / 640). In the first step (<code>get_roboflow_masks)</code> we generate all the masks from the JSON file and, in the second <code>simplify_roboflow_masks</code>, we aggregate/simplify the masks by label/category.</p>
 <div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">robo_masks</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/get_roboflow_masks.html">get_roboflow_masks</a></span><span class="op">(</span>path <span class="op">=</span> <span class="va">robo_rois_path</span>, </span>
+<code class="sourceCode R"><span><span class="co"># Make ROI masks from a json file generated in Roboflow app</span></span>
+<span><span class="va">robo_masks</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/get_roboflow_masks.html">get_roboflow_masks</a></span><span class="op">(</span>path <span class="op">=</span> <span class="va">robo_rois_path</span>, </span>
 <span>                                 rst_height <span class="op">=</span> <span class="fl">640</span>, </span>
 <span>                                 rst_width <span class="op">=</span> <span class="fl">480</span>,</span>
 <span>                                 geom_rescale <span class="op">=</span> <span class="fl">2.25</span><span class="op">)</span></span>
 <span></span>
-<span></span>
+<span><span class="co"># Simplify or aggregate the ROI masks if these are for the same category/label </span></span>
 <span><span class="va">robo_masks_simple</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/simplify_roboflow_masks.html">simplify_roboflow_masks</a></span><span class="op">(</span><span class="va">robo_masks</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">robo_masks_simple</span><span class="op">)</span></span></code></pre></div>
@@ -584,14 +586,14 @@ Roboflow interface with the annotations/ROI’s in JSON format in the bottom lef
 <span id="cb31-45"><a href="#cb31-45" tabindex="-1"></a><span class="do">## name        : layer </span></span>
 <span id="cb31-46"><a href="#cb31-46" tabindex="-1"></a><span class="do">## min value   :     1 </span></span>
 <span id="cb31-47"><a href="#cb31-47" tabindex="-1"></a><span class="do">## max value   :     1</span></span></code></pre></div>
-<p>ℹ️ <u><strong>Note</strong></u>: Re-scaling annotations is not needed if the size of the RGB and thermal images is exactly the same (which happens for “cropped” images as shown in the examples before).</p>
+<p><u><strong>Note</strong></u>: Re-scaling annotations is not needed if the size of the RGB and thermal images is exactly the same (which happens for “cropped” images as shown in the examples before).</p>
 <p>The output of is a list containing three elements:</p>
 <ul>
 <li><p><code>labs</code> with the labels of the ROI polygons,</p></li>
 <li><p><code>pol_masks</code> with the ROIs as <code>SpatVector</code> polygon objects, and</p></li>
 <li><p><code>rst_masks</code> with the ROIs as <code>SpatRaster</code>.</p></li>
 </ul>
-<p>After applying the simplyfying step we get a list similar in structure to the input but with all masks of the same label aggregated together. Each label will correspond to a single polygon mask and a single raster mask for each category, with the latter indicating presence (1 or TRUE) or absence (<code>NA</code>) of the label at each pixel.</p>
+<p>After applying the simplifying step we get a list similar in structure to the input but with all masks of the same label aggregated together. Each label will correspond to a single polygon mask and a single raster mask for each category, with the latter indicating presence (1 or TRUE) or absence (<code>NA</code>) of the label at each pixel.</p>
 <div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plotRGB.html" class="external-link">plotRGB</a></span><span class="op">(</span><span class="va">rgb_lr</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">robo_masks_simple</span><span class="op">$</span><span class="va">rst_masks</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, col<span class="op">=</span><span class="st">"blue"</span>, alpha<span class="op">=</span><span class="fl">0.3</span>, </span>
@@ -599,7 +601,7 @@ Roboflow interface with the annotations/ROI’s in JSON format in the bottom lef
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/legend.html" class="external-link">legend</a></span><span class="op">(</span><span class="st">"topright"</span>, legend <span class="op">=</span> <span class="st">"cavity"</span>, pch <span class="op">=</span> <span class="fl">20</span>, xpd<span class="op">=</span><span class="cn">NA</span>, bg<span class="op">=</span><span class="st">"white"</span>, </span>
 <span>       col<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"blue"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="README_files/figure-gfm/unnamed-chunk-5-1.png"><!-- --></p>
+<p><img src="README_files/figure-gfm/plot-roboflow-rois-1.png"><!-- --></p>
 </div>
 </div>
 </div>

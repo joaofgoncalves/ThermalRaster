@@ -194,26 +194,27 @@ plot_temp_rast(temp_out_rm, palette="Spectral")
 The `ThermalRaster` package currently provides methods to generate
 **synthetic or predicted thermal data**. This enables to gain more
 detail into the fine-scale variation of surface temperature for
-inspecting/visualizing structures and micro-habitats.
+inspecting/visualizing certain structures and/or micro-habitats.
 
 To achieve this, we use the overlap between the “low-resolution” thermal
 imagery — i.e., as the target or response variable — with the
-“high-resolution” RGB cropped image — i.e., predictors or features,
-based on color and texture — to train a Random Forest or Deep Learning
-model.
+“high-resolution” RGB cropped image — i.e., as the predictors or
+features, mainly based on color and texture — to train a Random Forest
+or Deep Learning model.
 
 Because generalization across images is highly “challenging”, to
 implement these methods we need to train the model every time. This also
 means different levels of performance or success depending on the
 objects depicted in the images.
 
-After training, the model it can be applied onto the images used for
+After training, the model can be applied onto the images used for
 training — i.e., the “low-resolution” or cropped RGB images — and also
-the full RGB image both extracted from the FLIR’s metadata.
+the full size RGB image (both extracted from the FLIR’s metadata using
+the `ThermalRaster` package).
 
-Keep in mind that synthetic/predicted thermal data for the full RGB has
-limitations since the train region may not include features in this
-image.
+Keep in mind that synthetic/predicted thermal data for the full size RGB
+has limitations since the train region does not include certain parts,
+objects or features in this bigger image.
 
 ``` r
 rf_sup_res <- rf_thermal_from_rgb(
@@ -241,9 +242,9 @@ rf_sup_res <- rf_thermal_from_rgb(
     ## |-> Calculating features for the high-resolution RGB image ...
     ## Done.
     ## 
-    ## Predicting.. Progress: 75%. Estimated remaining time: 10 seconds.
+    ## Predicting.. Progress: 46%. Estimated remaining time: 35 seconds.
     ## Done.
-    ## [Run Time: 2 minutes 37 seconds ]
+    ## [Run Time: 2 minutes 16 seconds ]
 
 Let’s check the RF model output:
 
@@ -264,8 +265,8 @@ print(rf_sup_res$rf_mod)
     ## Target node size:                 5 
     ## Variable importance mode:         none 
     ## Splitrule:                        variance 
-    ## OOB prediction error (MSE):       22.89146 
-    ## R squared (OOB):                  0.7085754
+    ## OOB prediction error (MSE):       23.22192 
+    ## R squared (OOB):                  0.7109125
 
 Now, let’s plot the predicted image considering the train/cropped RGB
 (with outliers removed: \< 3.5% percentile):
@@ -307,7 +308,20 @@ fully outside of the training sample/conditions!
 
 ## Working with regions-of-interest ROIs
 
-Basically there are two ways to currently
+Regions of Interest (ROIs) — i.e., a subset of the image such as a
+rectangle or an irregular polygon/shape — are crucial in image analysis
+for focusing the analysis on specific parts of an image while excluding
+irrelevant areas. Basically there are two ways to make or delineate ROIs
+to use with `ThermalRaster`. The first one is to employ the `draw`
+function from the `terra` package and, the second is to use Roboflow
+online annotation tool (<https://roboflow.com/>). While the first is
+easier to set up and use, the second is much more powerful (involving
+semi-automated with state-of-the-art algorithms or manual digitization)
+especially for irregular or complex shapes; however, the latter involves
+sharing your image data (part of it at least) and learning how to deploy
+it.
+
+Both methods are explained below in detail.
 
 ### Drawing ROIs with the terra package
 
@@ -517,7 +531,7 @@ plot(g2)
 Roboflow is a development platform that simplifies the process of
 building and deploying computer vision models. It offers a range of
 tools designed to assist developers in preparing, creating, and managing
-datasets needed for training machine learning models, with a particular
+data sets needed for training machine learning models, with a particular
 emphasis on image recognition tasks.
 
 In this context we will use Roboflow’s features to generate ROI’s of
@@ -553,9 +567,8 @@ In a nutshell, there are two main ways of making ROI’s in Roboflow:
 
   ![](man/figures/RoboFlow_Polygon_tool.png)
 
-ℹ️ <u>**Note**</u>: polygons cannot have “holes” or “islands”. This set
-of tools for annotation in Roboflow app cannot handle such
-representations.
+<u>**Note**</u>: polygons cannot have “holes” or “islands”. This set of
+tools for annotation in Roboflow app cannot handle such representations.
 
 Roboflow annotations are recorded into a specific JSON format.
 `ThermalRaster` can use these data stored as JSON files and convert them
@@ -596,12 +609,13 @@ in the second `simplify_roboflow_masks`, we aggregate/simplify the masks
 by label/category.
 
 ``` r
+# Make ROI masks from a json file generated in Roboflow app
 robo_masks <- get_roboflow_masks(path = robo_rois_path, 
                                  rst_height = 640, 
                                  rst_width = 480,
                                  geom_rescale = 2.25)
 
-
+# Simplify or aggregate the ROI masks if these are for the same category/label 
 robo_masks_simple <- simplify_roboflow_masks(robo_masks)
 
 print(robo_masks_simple)
@@ -655,9 +669,9 @@ print(robo_masks_simple)
     ## min value   :     1 
     ## max value   :     1
 
-ℹ️ <u>**Note**</u>: Re-scaling annotations is not needed if the size of
-the RGB and thermal images is exactly the same (which happens for
-“cropped” images as shown in the examples before).
+<u>**Note**</u>: Re-scaling annotations is not needed if the size of the
+RGB and thermal images is exactly the same (which happens for “cropped”
+images as shown in the examples before).
 
 The output of is a list containing three elements:
 
@@ -667,7 +681,7 @@ The output of is a list containing three elements:
 
 - `rst_masks` with the ROIs as `SpatRaster`.
 
-After applying the simplyfying step we get a list similar in structure
+After applying the simplifying step we get a list similar in structure
 to the input but with all masks of the same label aggregated together.
 Each label will correspond to a single polygon mask and a single raster
 mask for each category, with the latter indicating presence (1 or TRUE)
@@ -682,4 +696,4 @@ legend("topright", legend = "cavity", pch = 20, xpd=NA, bg="white",
        col=c("blue"))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+![](README_files/figure-gfm/plot-roboflow-rois-1.png)<!-- -->
