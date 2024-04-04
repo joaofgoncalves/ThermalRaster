@@ -19,7 +19,7 @@ João Gonçalves
     ROIs](#working-with-regions-of-interest-rois)
     - [Drawing ROIs with the terra
       package](#drawing-rois-with-the-terra-package)
-    - [Drawing ROIs with the Roboflow](#drawing-rois-with-the-roboflow)
+    - [Drawing ROIs with Roboflow app](#drawing-rois-with-roboflow-app)
 
 ## Package description
 
@@ -242,9 +242,10 @@ rf_sup_res <- rf_thermal_from_rgb(
     ## |-> Calculating features for the high-resolution RGB image ...
     ## Done.
     ## 
-    ## Predicting.. Progress: 46%. Estimated remaining time: 35 seconds.
+    ## Predicting.. Progress: 58%. Estimated remaining time: 22 seconds.
+    ## Predicting.. Progress: 97%. Estimated remaining time: 2 seconds.
     ## Done.
-    ## [Run Time: 2 minutes 16 seconds ]
+    ## [Run Time: 2 minutes 35 seconds ]
 
 Let’s check the RF model output:
 
@@ -265,8 +266,8 @@ print(rf_sup_res$rf_mod)
     ## Target node size:                 5 
     ## Variable importance mode:         none 
     ## Splitrule:                        variance 
-    ## OOB prediction error (MSE):       23.22192 
-    ## R squared (OOB):                  0.7109125
+    ## OOB prediction error (MSE):       22.07124 
+    ## R squared (OOB):                  0.715415
 
 Now, let’s plot the predicted image considering the train/cropped RGB
 (with outliers removed: \< 3.5% percentile):
@@ -526,7 +527,7 @@ plot(g2)
 
 ------------------------------------------------------------------------
 
-### Drawing ROIs with the Roboflow
+### Drawing ROIs with Roboflow app
 
 Roboflow is a development platform that simplifies the process of
 building and deploying computer vision models. It offers a range of
@@ -534,18 +535,17 @@ tools designed to assist developers in preparing, creating, and managing
 data sets needed for training machine learning models, with a particular
 emphasis on image recognition tasks.
 
-In this context we will use Roboflow’s features to generate ROI’s of
-micro-habitats to showcase its main functions. A
-[tutorial/vignette](vignettes/Protocol_for_annotating_thermal_images_using_Roboflow_app.pdf)
-on this issue is provided here with much more details on how to collect
-ROI’s using Roboflow.
+In this context we will use Roboflow to generate ROI’s of micro-habitats
+to showcase their thermal variability. A tutorial/vignette on how to
+create ROI masks with Roboflow is provided in this
+[link](vignettes/Protocol_for_annotating_thermal_images_using_Roboflow_app.pdf).
 
 <figure>
 <img src="man/figures/Roboflow_app_01.png"
-alt="Examples of Roboflow annotations on tree micro-habitats. Notice the detailed contours that this tool is capable of capturing." />
+alt="Examples of Roboflow annotations on tree structures/micro-habitats. Notice the detailed contours that Roboflow semi-automated tools are capable of capturing." />
 <figcaption aria-hidden="true">Examples of Roboflow annotations on tree
-micro-habitats. Notice the detailed contours that this tool is capable
-of capturing.</figcaption>
+structures/micro-habitats. Notice the detailed contours that Roboflow
+semi-automated tools are capable of capturing.</figcaption>
 </figure>
 
 In a nutshell, there are two main ways of making ROI’s in Roboflow:
@@ -572,7 +572,10 @@ tools for annotation in Roboflow app cannot handle such representations.
 
 Roboflow annotations are recorded into a specific JSON format.
 `ThermalRaster` can use these data stored as JSON files and convert them
-into `sf` objects compatible with raster data from the `terra` package.
+into spatial objects (i.e., `SpatVector`) compatible with raster data
+from the `terra` package. This enables the use of terra’s `extract`
+function to get the pixel values inside the ROI and analyze them
+further.
 
 <figure>
 <img src="man/figures/Roboflow_interface.png"
@@ -598,15 +601,15 @@ print(json$boxes[,1:6])
     ## 1 polygon cavity 646.8750 831.7969  455.6250 1213.5938
     ## 2 polygon   bole 532.9688 720.0000 1054.6875 1440.0000
 
-To convert Roboflow annotations into `sf` polygons actually usable with
+To convert Roboflow annotations into `SpatVector` polygons usable with
 `ThermalRaster` is simple. In this example, the ROIs were collected in
 Roboflow from FLIR’s thumbnail image — which has a size of 1440 x 1080
 pixels — however, we want to convert those annotations into the
 dimensions of the thermal image (which is 640 x 480) hence with a scale
 factor of 2.25 (i.e., f = 1440 / 640). In the first step
 (`get_roboflow_masks)` we generate all the masks from the JSON file and,
-in the second `simplify_roboflow_masks`, we aggregate/simplify the masks
-by label/category.
+in the second step `simplify_roboflow_masks`, we aggregate/simplify the
+masks by label/category.
 
 ``` r
 # Make ROI masks from a json file generated in Roboflow app
@@ -670,10 +673,11 @@ print(robo_masks_simple)
     ## max value   :     1
 
 <u>**Note**</u>: Re-scaling annotations is not needed if the size of the
-RGB and thermal images is exactly the same (which happens for “cropped”
-images as shown in the examples before).
+RGB and the thermal image is exactly the same (which happens in most
+cases for “cropped” images as shown in the examples before).
 
-The output of is a list containing three elements:
+The output of the “get” and “simplify” functions above is a list
+containing three elements:
 
 - `labs` with the labels of the ROI polygons,
 
@@ -681,19 +685,30 @@ The output of is a list containing three elements:
 
 - `rst_masks` with the ROIs as `SpatRaster`.
 
-After applying the simplifying step we get a list similar in structure
-to the input but with all masks of the same label aggregated together.
-Each label will correspond to a single polygon mask and a single raster
-mask for each category, with the latter indicating presence (1 or TRUE)
-or absence (`NA`) of the label at each pixel.
+After applying the simplify step, we get a list similar in structure to
+the input but with all masks of the same label aggregated together. Each
+label will correspond to a single polygon mask and a single raster mask
+for each category, with the latter indicating presence (1 or TRUE) or
+absence (`NA`) of the label at each pixel.
 
 ``` r
 plotRGB(rgb_lr)
 plot(robo_masks_simple$rst_masks[[1]], col="blue", alpha=0.3, 
      add=TRUE, legend=FALSE)
 
-legend("topright", legend = "cavity", pch = 20, xpd=NA, bg="white", 
-       col=c("blue"))
+legend("topright", legend = robo_masks_simple$labs[1], 
+       pch = 20, xpd=NA, bg="white", col=c("blue"))
 ```
 
-![](README_files/figure-gfm/plot-roboflow-rois-1.png)<!-- -->
+![](README_files/figure-gfm/plot-roboflow-roi-1-1.png)<!-- -->
+
+``` r
+plotRGB(rgb_lr)
+plot(robo_masks_simple$rst_masks[[2]], col="red", alpha=0.3, 
+     add=TRUE, legend=FALSE)
+
+legend("topright", legend = robo_masks_simple$labs[2], 
+       pch = 20, xpd=NA, bg="white", col=c("red"))
+```
+
+![](README_files/figure-gfm/plot-roboflow-roi-2-1.png)<!-- -->
