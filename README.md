@@ -1,7 +1,7 @@
 README
 ================
 João Gonçalves
-2024-03-27
+2024-04-02
 
 # ThermalRaster
 
@@ -19,6 +19,7 @@ João Gonçalves
     ROIs](#working-with-regions-of-interest-rois)
     - [Drawing ROIs with the terra
       package](#drawing-rois-with-the-terra-package)
+    - [Drawing ROIs with the Roboflow](#drawing-rois-with-the-roboflow)
 
 ## Package description
 
@@ -32,7 +33,7 @@ enabling to profit from this package features/toolkit.
 
 Using the overlap between low-resolution thermal imagery with
 high-resolution RGB images, the package enables the creation of
-synthetic or predicted thermal images for either cropped or entire RGB
+synthetic or predicted thermal images for either cropped or full RGB
 images. This is achieved through the application of the Random Forest
 algorithm (via the **`ranger`** package) or Deep Learning methodologies
 (utilizing **`keras`**/**`tensorflow`**).
@@ -240,9 +241,9 @@ rf_sup_res <- rf_thermal_from_rgb(
     ## |-> Calculating features for the high-resolution RGB image ...
     ## Done.
     ## 
-    ## Predicting.. Progress: 72%. Estimated remaining time: 11 seconds.
+    ## Predicting.. Progress: 75%. Estimated remaining time: 10 seconds.
     ## Done.
-    ## [Run Time: 2 minutes 1 seconds ]
+    ## [Run Time: 2 minutes 37 seconds ]
 
 Let’s check the RF model output:
 
@@ -263,8 +264,8 @@ print(rf_sup_res$rf_mod)
     ## Target node size:                 5 
     ## Variable importance mode:         none 
     ## Splitrule:                        variance 
-    ## OOB prediction error (MSE):       22.97386 
-    ## R squared (OOB):                  0.7058247
+    ## OOB prediction error (MSE):       22.89146 
+    ## R squared (OOB):                  0.7085754
 
 Now, let’s plot the predicted image considering the train/cropped RGB
 (with outliers removed: \< 3.5% percentile):
@@ -301,6 +302,8 @@ plot_temp_rast(pred_term_full_outlrm, palette = "magma", main="Synthetic/predict
 
 Notice how the RF model can reasonably predict the temperature of pixels
 fully outside of the training sample/conditions!
+
+------------------------------------------------------------------------
 
 ## Working with regions-of-interest ROIs
 
@@ -365,15 +368,18 @@ bole_s2$type <- "cavity"
 tree_samps <- bole_s1 + bole_s2
 
 #(Write data to later reuse)
-writeVector(tree_samps, filename = "./inst/extdata/QUEROB1_EINBRGB_BWWG4662_ROIs_bole.json",
-            overwrite = TRUE)
+# writeVector(tree_samps, filename = "./inst/extdata/QUEROB1_EINBRGB_BWWG4662_ROIs_bole.json",
+#             overwrite = TRUE)
 ```
 
 Now let’s compare the distribution of temperature values for the bark
 and the cavity for an oak tree:
 
 ``` r
-tree_samps <- vect("./inst/extdata/QUEROB1_EINBRGB_BWWG4662_ROIs_bole.json")
+geojson_file <- system.file("extdata", "QUEROB1_EINBRGB_BWWG4662_ROIs_bole.json", 
+                            package = "ThermalRaster")
+
+tree_samps <- vect(geojson_file)
 crs(tree_samps) <- NA
 
 par(mfrow=c(1,2))
@@ -415,7 +421,7 @@ ext_values %>%
 
 Average and std-deviation of temperature values (deg.C)
 
-Now let’s use a different image, this time for beech tree:
+Now let’s use a different image, this time for a beech tree:
 
 ``` r
 beech_image_path <- system.file("extdata", "BEECH1_EOUTTREERGB_ILAC9031.JPG", package = "ThermalRaster")
@@ -426,7 +432,9 @@ beech_rgb <- flir_rgb_to_rast(beech_image_path, exiftool_path, crop=TRUE)
 beech_temp <- flir_raw_to_thermal(beech_image_path, exiftool_path)
 names(beech_temp) <- "temp_c"
 
-beech_tree_samps <- vect("./inst/extdata/BEECH1_EOUTTREERGB_ILAC9031_ROIs_bole.json")
+beech_geojson_file <- system.file("extdata", "BEECH1_EOUTTREERGB_ILAC9031_ROIs_bole.json", 
+                            package = "ThermalRaster")
+beech_tree_samps <- vect(beech_geojson_file)
 crs(beech_tree_samps) <- NA
 
 par(mfrow=c(1,2))
@@ -468,7 +476,9 @@ beech_ext_values %>%
 
 Average and std-deviation of temperature values (deg.C)
 
-Make a plot comparing the distributions for the two tree micro-habitats:
+Now, let’s make a plot comparing the distributions of the two
+micro-habitats - check for potential multimodality and differences on
+the medians:
 
 ``` r
 g1 <- ggplot(ext_values, aes(x=temp_c, fill=type)) + 
@@ -484,6 +494,8 @@ plot(g1)
 
 ![](README_files/figure-gfm/unnamed-chunk-1-1.png)<!-- -->
 
+The same plot but this time for the beech:
+
 ``` r
 g2 <- ggplot(beech_ext_values, aes(x=temp_c, fill=type)) + 
       geom_density(alpha=0.5) + 
@@ -497,3 +509,177 @@ plot(g2)
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+
+------------------------------------------------------------------------
+
+### Drawing ROIs with the Roboflow
+
+Roboflow is a development platform that simplifies the process of
+building and deploying computer vision models. It offers a range of
+tools designed to assist developers in preparing, creating, and managing
+datasets needed for training machine learning models, with a particular
+emphasis on image recognition tasks.
+
+In this context we will use Roboflow’s features to generate ROI’s of
+micro-habitats to showcase its main functions. A
+[tutorial/vignette](vignettes/Protocol_for_annotating_thermal_images_using_Roboflow_app.pdf)
+on this issue is provided here with much more details on how to collect
+ROI’s using Roboflow.
+
+<figure>
+<img src="man/figures/Roboflow_app_01.png"
+alt="Examples of Roboflow annotations on tree micro-habitats. Notice the detailed contours that this tool is capable of capturing." />
+<figcaption aria-hidden="true">Examples of Roboflow annotations on tree
+micro-habitats. Notice the detailed contours that this tool is capable
+of capturing.</figcaption>
+</figure>
+
+In a nutshell, there are two main ways of making ROI’s in Roboflow:
+
+- “**Smart Polygon**” – This is a semi-automatic tool based on SAM
+  (Facebook’s Segment Anything Model) which can retrieve object
+  boundaries easily, sometimes with a single click. Use one click to add
+  one point inside the area you want to be on the polygon mask. If new
+  points are added within the initial area, that area will be removed.
+  Conversely, if a point is placed outside the existing area, the
+  algorithm will try to expand the object the best way possible by
+  context, spectral and textural similarity.
+
+  ![](man/figures/RoboFlow_SmartPolygon_tool.png)
+
+- Another available option is the fully manual “**Polygon Tool**”, which
+  gives complete control to the user for drawing a polygon to delineate
+  the mask.
+
+  ![](man/figures/RoboFlow_Polygon_tool.png)
+
+ℹ️ <u>**Note**</u>: polygons cannot have “holes” or “islands”. This set
+of tools for annotation in Roboflow app cannot handle such
+representations.
+
+Roboflow annotations are recorded into a specific JSON format.
+`ThermalRaster` can use these data stored as JSON files and convert them
+into `sf` objects compatible with raster data from the `terra` package.
+
+<figure>
+<img src="man/figures/Roboflow_interface.png"
+alt="Roboflow interface with the annotations/ROI’s in JSON format in the bottom left corner. In this case an oak tree canopy is displayed in the sample." />
+<figcaption aria-hidden="true">Roboflow interface with the
+annotations/ROI’s in JSON format in the bottom left corner. In this case
+an oak tree canopy is displayed in the sample.</figcaption>
+</figure>
+
+``` r
+# Roboflow sample data
+robo_rois_path <- system.file("extdata", "EINBRGB_IPUQ4327.json", 
+                          package = "ThermalRaster")
+
+
+# JSON data loaded from a Roboflow json file
+json <- jsonlite::fromJSON(robo_rois_path)
+
+print(json$boxes[,1:6])
+```
+
+    ##      type  label        x        y     width    height
+    ## 1 polygon cavity 646.8750 831.7969  455.6250 1213.5938
+    ## 2 polygon   bole 532.9688 720.0000 1054.6875 1440.0000
+
+To convert Roboflow annotations into `sf` polygons actually usable with
+`ThermalRaster` is simple. In this example, the ROIs were collected in
+Roboflow from FLIR’s thumbnail image — which has a size of 1440 x 1080
+pixels — however, we want to convert those annotations into the
+dimensions of the thermal image (which is 640 x 480) hence with a scale
+factor of 2.25 (i.e., f = 1440 / 640). In the first step
+(`get_roboflow_masks)` we generate all the masks from the JSON file and,
+in the second `simplify_roboflow_masks`, we aggregate/simplify the masks
+by label/category.
+
+``` r
+robo_masks <- get_roboflow_masks(path = robo_rois_path, 
+                                 rst_height = 640, 
+                                 rst_width = 480,
+                                 geom_rescale = 2.25)
+
+
+robo_masks_simple <- simplify_roboflow_masks(robo_masks)
+
+print(robo_masks_simple)
+```
+
+    ## $labs
+    ## [1] "cavity" "bole"  
+    ## 
+    ## $pol_masks
+    ## $pol_masks[[1]]
+    ##  class       : SpatVector 
+    ##  geometry    : polygons 
+    ##  dimensions  : 1, 1  (geometries, attributes)
+    ##  extent      : 187, 389, 1, 540  (xmin, xmax, ymin, ymax)
+    ##  coord. ref. :  
+    ##  names       : layer
+    ##  type        : <int>
+    ##  values      :     1
+    ## 
+    ## $pol_masks[[2]]
+    ##  class       : SpatVector 
+    ##  geometry    : polygons 
+    ##  dimensions  : 1, 1  (geometries, attributes)
+    ##  extent      : 3, 471, 0, 640  (xmin, xmax, ymin, ymax)
+    ##  coord. ref. :  
+    ##  names       : layer
+    ##  type        : <int>
+    ##  values      :     1
+    ## 
+    ## 
+    ## $rst_masks
+    ## $rst_masks[[1]]
+    ## class       : SpatRaster 
+    ## dimensions  : 640, 480, 1  (nrow, ncol, nlyr)
+    ## resolution  : 1, 1  (x, y)
+    ## extent      : 0, 480, 0, 640  (xmin, xmax, ymin, ymax)
+    ## coord. ref. :  
+    ## source(s)   : memory
+    ## name        : layer 
+    ## min value   :     1 
+    ## max value   :     1 
+    ## 
+    ## $rst_masks[[2]]
+    ## class       : SpatRaster 
+    ## dimensions  : 640, 480, 1  (nrow, ncol, nlyr)
+    ## resolution  : 1, 1  (x, y)
+    ## extent      : 0, 480, 0, 640  (xmin, xmax, ymin, ymax)
+    ## coord. ref. :  
+    ## source(s)   : memory
+    ## name        : layer 
+    ## min value   :     1 
+    ## max value   :     1
+
+ℹ️ <u>**Note**</u>: Re-scaling annotations is not needed if the size of
+the RGB and thermal images is exactly the same (which happens for
+“cropped” images as shown in the examples before).
+
+The output of is a list containing three elements:
+
+- `labs` with the labels of the ROI polygons,
+
+- `pol_masks` with the ROIs as `SpatVector` polygon objects, and
+
+- `rst_masks` with the ROIs as `SpatRaster`.
+
+After applying the simplyfying step we get a list similar in structure
+to the input but with all masks of the same label aggregated together.
+Each label will correspond to a single polygon mask and a single raster
+mask for each category, with the latter indicating presence (1 or TRUE)
+or absence (`NA`) of the label at each pixel.
+
+``` r
+plotRGB(rgb_lr)
+plot(robo_masks_simple$rst_masks[[1]], col="blue", alpha=0.3, 
+     add=TRUE, legend=FALSE)
+
+legend("topright", legend = "cavity", pch = 20, xpd=NA, bg="white", 
+       col=c("blue"))
+```
+
+![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
