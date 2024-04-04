@@ -2,7 +2,7 @@
 % Please edit documentation in R/TR_proc_roboflow_masks.R
 \name{get_roboflow_masks}
 \alias{get_roboflow_masks}
-\title{Get Roboflow masks/annotations as sf polygons and SpatRaster objects}
+\title{Get Roboflow ROI masks/annotations as polygons and raster objects}
 \usage{
 get_roboflow_masks(
   path,
@@ -21,7 +21,7 @@ Defaults to 1440.}
 \item{rst_width}{The width (number of columns) for the input image and output mask.
 Defaults to 1080.}
 
-\item{geom_rescale}{A numeric value or NULL. If specified, it is used to rescale
+\item{geom_rescale}{A numeric value or `NULL`. If specified, it is used to rescale
 the polygon vertices to match a different image resolution.
 This is useful when the annotation coordinates in the JSON
 file are based on a different resolution than the target
@@ -29,14 +29,14 @@ raster. If NULL, no rescaling is applied.}
 }
 \value{
 A list containing three elements: `labs` with the labels of the polygons,
-        `pol_masks` with the `sf` polygon objects, and `rst_masks` with the
-        corresponding raster masks.
+        `pol_masks` with the `SpatVector` polygon objects, and `rst_masks` with the
+        corresponding rasters as `SpatRaster` masks/ROIs.
 }
 \description{
 Extracts polygon masks from a JSON file, as formatted by Roboflow, and converts
-them to `sf` polygon objects. Additionally, it creates raster masks from these
-polygons based on specified image dimensions. This function is useful for
-processing polygon annotations from machine learning datasets, particularly for
-tasks involving spatial analysis or computer vision. It supports rescaling of
-geometric data to match different image resolutions.
+them to `SpatVector` polygon objects. Additionally, it creates raster ROI masks
+(as `SpatRaster` objects) from these polygons based on specified image dimensions.
+This function is useful for processing polygon annotations from machine learning datasets,
+particularly for tasks involving spatial analysis or computer vision. It supports rescaling
+of geometric data to match different image resolutions.
 }
