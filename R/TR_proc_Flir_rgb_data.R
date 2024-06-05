@@ -60,6 +60,7 @@ flir_thumbnail_to_rast <- function(img_path, as_decimal = FALSE){
 #' @importFrom imager load.image
 #' @importFrom terra rast
 #'
+#' @export
 #'
 
 flir_get_full_rgb <- function(img_path, out_path, replace = FALSE,
@@ -115,15 +116,42 @@ flir_get_full_rgb <- function(img_path, out_path, replace = FALSE,
 #' both sources.
 #'
 #' @param img_path Path to the input FLIR radiometric JPEG file.
+#'
 #' @param exiftool_path Path to the EXIFtool executable, including trailing slash.
-#' @param out_path Optional. The location/path where to save the full RGB image. IF `NULL`
+#'
+#' @param out_path Optional. The location/path where to save the full RGB image. If `NULL`
 #' the directory of the input will be used with a file name suffix _full_RGB.jpg. This image
 #' will be created by EXIFtool by extracting the RGB image from metadata. If a file
 #' path is specified it must be of jpg extension.
+#'
 #' @param crop Logical flag indicating whether to crop the extracted RGB image to
 #'             match the dimensions of the thermal image. Defaults to TRUE.
+#'
+#' @param crop_center_method If crop=TRUE two methods are available for cropping the image:
+#' \itemize{
+#'    \item scale_center_xy" or 1 - this methods applies i) a scale factor (named `Real 2 IR` in
+#' FLIR metadata) to increase the image, ii) determines the center of the re-scaled image by halving the image size,
+#' iii) calculates the offset center by summing the X/Y offset parameters multiplied by the scale
+#' parameter (i.e., `Real 2 IR`value), (iv) from the offset image center, extracts the low-resolution RGB overlapping
+#' with the thermal image;
+#'
+#'    \item scale_y_only or 2 - this methods applies i) a scale factor (named `Real 2 IR` in
+#' FLIR metadata) to increase the image, ii) determines the center of the re-scaled image by halving the image size,
+#' iii) calculates the offset center by summing the center x coordinate with the X offset value from metadata and the
+#' center y coordinate with the Y Offset divided by the scale factor (`Real 2 IR`), (iv) from the offset image center,
+#' extracts the low-resolution RGB overlapping with the thermal IR image;
+#' }
+#'
+#' @param scale_factor The scale factor from FLIR metadata. Optionally it can be passed directly using this input
+#' (default: not used equals NULL);
+#' @param offset_x The scale X Offset from FLIR metadata. Optionally it can be passed directly using this input
+#' (default: not used equals NULL);
+#' @param offset_y The Y Offset from FLIR metadata. Optionally it can be passed directly using this input
+#' (default: not used equals NULL);
+#'
 #' @param out_path_crop Path to where the cropped imaged will be saved. This will use
 #' `terra::writeRaster` to write the image data.
+#'
 #' @param overwrite Overwrite image data in `terra::writeRaster`? Default: TRUE
 #'
 #' @return A `SpatRaster` object representing the extracted image. If `crop=TRUE` the cropped
@@ -137,8 +165,16 @@ flir_get_full_rgb <- function(img_path, out_path, replace = FALSE,
 #' @export
 #'
 
-flir_rgb_to_rast <- function(img_path, exiftool_path, out_path = NULL,
-                             crop = TRUE, out_path_crop = NULL, overwrite = TRUE){
+flir_rgb_to_rast <- function(img_path,
+                             exiftool_path,
+                             out_path = NULL,
+                             crop = TRUE,
+                             crop_center_method = "scale_center_xy",
+                             out_path_crop = NULL,
+                             scale_factor = NULL,
+                             offset_x = NULL,
+                             offset_y = NULL,
+                             overwrite = TRUE){
 
   # Assemble the output paths for the full RGB image and
   # the cropped image (if crop = TRUE)
@@ -148,27 +184,17 @@ flir_rgb_to_rast <- function(img_path, exiftool_path, out_path = NULL,
       output_img_path_crop <- paste0(fn,"_crop_RGB.tif")
       output_img_path_full <- paste0(fn,"_full_RGB.jpg")
     }else{
-      # fn <- tools::file_path_sans_ext(basename(img_path))
-      # output_img_path_crop <- paste0(check_trailing_slash(output_folder)
-      #                                ,fn,"_crop_RGB.tif")
-      # output_img_path_full <- paste0(check_trailing_slash(output_folder)
-      #                                ,fn,"_full_RGB.tif")
 
       output_img_path_full <- out_path
       output_img_path_crop <- out_path_crop
     }
   }else{
     if(is.null(out_path)){
-      # fn <- tools::file_path_sans_ext(img_path)
-      # output_img_path_full <- paste0(fn,"_full_RGB.jpg")
+
       fn <- tools::file_path_sans_ext(img_path)
       output_img_path_full <- paste0(fn,"_full_RGB.jpg")
     }else{
-      # fn <- tools::file_path_sans_ext(basename(img_path))
-      # output_img_path_crop <- paste0(check_trailing_slash(output_folder)
-      #                                ,fn,"_crop_RGB.tif")
-      # output_img_path_full <- paste0(check_trailing_slash(output_folder)
-      #                                ,fn,"_full_RGB.jpg")
+
       output_img_path_full <- out_path
       output_img_path_crop <- out_path_crop
     }
@@ -176,7 +202,7 @@ flir_rgb_to_rast <- function(img_path, exiftool_path, out_path = NULL,
 
   exiftool_path <- check_trailing_slash(exiftool_path)
 
-  img <- flir_get_full_rgb(img_path,
+  img <- ThermalRaster::flir_get_full_rgb(img_path,
                            output_img_path_full,
                            replace = TRUE,
                            exiftool_path,
@@ -186,16 +212,25 @@ flir_rgb_to_rast <- function(img_path, exiftool_path, out_path = NULL,
 
     metadata <- try(Thermimage::flirsettings(img_path,
                                              exiftoolpath = exiftool_path,
-                                             camvals=""))
+                                             camvals = ""))
 
     if(inherits(metadata,"try-error")){
       stop("An error occurred while getting metadata from the Flir image in img_path!")
     }
 
-    # Extract the metadata parameters needed to perform the crop
-    scale <- metadata$Info$Real2IR
-    offset_x <- metadata$Info$OffsetX
-    offset_y <- metadata$Info$OffsetY
+    if(is.null(scale_factor) || is.null(offset_x) || is.null(offset_y)){
+      # Extract the metadata parameters needed to perform the crop
+      scale <- metadata$Info$Real2IR
+      offset_x <- metadata$Info$OffsetX
+      offset_y <- metadata$Info$OffsetY
+    }
+
+    if(!is.null(scale_factor) && !is.null(offset_x) && !is.null(offset_y)){
+      # Extract the metadata parameters needed to perform the crop
+      scale <- scale_factor
+      offset_x <- offset_x
+      offset_y <- offset_y
+    }
 
     # Output size of the cropped image
     width <- metadata$Info$RawThermalImageWidth
@@ -206,7 +241,7 @@ flir_rgb_to_rast <- function(img_path, exiftool_path, out_path = NULL,
     scale_y <- floor(height * scale)
 
     # Resize the original RGB image into the scaled version
-    # By default uses near-neigbour interpolation
+    # By default uses near-neighbor interpolation
     img_resized <- try(imager::resize(img,
                               size_x = scale_x,
                               size_y = scale_y,
@@ -216,12 +251,23 @@ flir_rgb_to_rast <- function(img_path, exiftool_path, out_path = NULL,
       stop("An error occurred while performing image resize with imager package!")
     }
 
-    #plot(img_resized)
-
     # Calculate the offset image center
-    ct = c(floor(scale_x / 2), floor(scale_y / 2)) # Raw image center/ without offsets
-    cx = ct[1] + offset_x * scale # Image center with scaled offsets for x
-    cy = ct[2] + offset_y * scale # Image center with scaled offsets for y
+
+    if(crop_center_method == "scale_center_xy" || crop_center_method == 1){
+
+      ct = c(floor(scale_x / 2), floor(scale_y / 2)) # Raw image center/ without offsets
+      cx = ct[1] + offset_x * scale # Image center with scaled offsets for x
+      cy = ct[2] + offset_y * scale # Image center with scaled offsets for y
+
+    }else if(crop_center_method == "scale_y_only" || crop_center_method == 2){
+
+      ct = c(floor(scale_x / 2), floor(scale_y / 2)) # Raw image center/ without offsets
+      cx = ct[1] + offset_x # Image center with scaled offsets for x
+      cy = ct[2] + (offset_y / scale) # Image center with scaled offsets for y
+
+    }else{
+      stop("crop_center_method not available. Check input parameters!")
+    }
 
     # Based on the image center calculate the image ranges
     # which will be used to crop
@@ -231,6 +277,22 @@ flir_rgb_to_rast <- function(img_path, exiftool_path, out_path = NULL,
       floor(cy - height / 2) + 1,
       floor(cy + height / 2)
     )
+
+    # Check for size differences
+    crop_width <- length(crop_ranges[1]:crop_ranges[2])
+    crop_height <- length(crop_ranges[3]:crop_ranges[4])
+
+    if(crop_width != width){
+      stop("Wrong crop_width found! Should be: ",width," and is: ",crop_width)
+    }
+    if(crop_height != height){
+      stop("Wrong crop_height found! Should be: ",height," and is: ",crop_height)
+    }
+
+    if(any(crop_ranges < 0)){
+      stop("Crop ranges cannot be negative! Maybe consider changing the crop_center_method?
+           Check documentation for more details.")
+    }
 
     img_cropped <-
       suppressWarnings(
