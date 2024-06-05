@@ -9,7 +9,11 @@ flir_rgb_to_rast(
   exiftool_path,
   out_path = NULL,
   crop = TRUE,
+  crop_center_method = "scale_center_xy",
   out_path_crop = NULL,
+  scale_factor = NULL,
+  offset_x = NULL,
+  offset_y = NULL,
   overwrite = TRUE
 )
 }
@@ -18,7 +22,7 @@ flir_rgb_to_rast(
 
 \item{exiftool_path}{Path to the EXIFtool executable, including trailing slash.}
 
-\item{out_path}{Optional. The location/path where to save the full RGB image. IF `NULL`
+\item{out_path}{Optional. The location/path where to save the full RGB image. If `NULL`
 the directory of the input will be used with a file name suffix _full_RGB.jpg. This image
 will be created by EXIFtool by extracting the RGB image from metadata. If a file
 path is specified it must be of jpg extension.}
@@ -26,8 +30,32 @@ path is specified it must be of jpg extension.}
 \item{crop}{Logical flag indicating whether to crop the extracted RGB image to
 match the dimensions of the thermal image. Defaults to TRUE.}
 
+\item{crop_center_method}{If crop=TRUE two methods are available for cropping the image:
+\itemize{
+   \item scale_center_xy" or 1 - this methods applies i) a scale factor (named `Real 2 IR` in
+FLIR metadata) to increase the image, ii) determines the center of the re-scaled image by halving the image size,
+iii) calculates the offset center by summing the X/Y offset parameters multiplied by the scale
+parameter (i.e., `Real 2 IR`value), (iv) from the offset image center, extracts the low-resolution RGB overlapping
+with the thermal image;
+
+   \item scale_y_only or 2 - this methods applies i) a scale factor (named `Real 2 IR` in
+FLIR metadata) to increase the image, ii) determines the center of the re-scaled image by halving the image size,
+iii) calculates the offset center by summing the center x coordinate with the X offset value from metadata and the
+center y coordinate with the Y Offset divided by the scale factor (`Real 2 IR`), (iv) from the offset image center,
+extracts the low-resolution RGB overlapping with the thermal IR image;
+}}
+
 \item{out_path_crop}{Path to where the cropped imaged will be saved. This will use
 `terra::writeRaster` to write the image data.}
+
+\item{scale_factor}{The scale factor from FLIR metadata. Optionally it can be passed directly using this input
+(default: not used equals NULL);}
+
+\item{offset_x}{The scale X Offset from FLIR metadata. Optionally it can be passed directly using this input
+(default: not used equals NULL);}
+
+\item{offset_y}{The Y Offset from FLIR metadata. Optionally it can be passed directly using this input
+(default: not used equals NULL);}
 
 \item{overwrite}{Overwrite image data in `terra::writeRaster`? Default: TRUE}
 }

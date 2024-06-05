@@ -20,7 +20,7 @@ A `SpatRaster` object with three layers corresponding to the red,
         `as_decimal` parameter.
 }
 \description{
-Converts an image in `cimg` class format to a `SpatRaster` object, optionally
+Converts an RGB image in `cimg` class format to a `SpatRaster` object, optionally
 converting pixel values to decimal format. The function creates three separate
 raster layers for the red, green, and blue channels of the image. This is useful
 for processing or analyzing images in a spatial context using the `terra` package.
