@@ -28,10 +28,15 @@
 
 remove_outliers <- function(rast,  pmin = 5, pmax = 100, na.rm=TRUE){
 
+  # Get raster values
   tv <- terra::values(rast)
+  # Calculate quantiles for pmnin and pmax
   qts <- quantile(tv, probs = c(pmin / 100, pmax / 100),na.rm=na.rm)
 
+  # Set intervals as NA in extracted values
   tv[(tv < qts[1]) | tv > qts[2]] <- NA
+
+  # Make new raster
   temp_c <- rast
   terra::values(temp_c) <- tv
 
@@ -157,13 +162,21 @@ rast_upsample <- function(rst, to_height = 1440, to_width = 1080,
     stop("Input object in rst must be of class SpatRaster!")
   }
 
+  # Get image dims
   dims <- dim(rst)
+
+  # Calculate the scale factor which will be used as the resolution
+  # in terra SpatRaster
   scale_factor <- to_height / dims[1]
 
+  # Loop across all bands
   for(i in 1:dims[3]){
+
+    # Temp raster with resolution equal to scale and same size as input
     tmp <- terra::rast(nrows = dims[1], ncols = dims[2], res = scale_factor, crs = "",
                 xmin = 0, ymin = 0, xmax = to_width, ymax = to_height)
 
+    # Set raster values
     terra::values(tmp) <- as.numeric(terra::values(rst[[i]]))
 
     if(i == 1){
@@ -173,9 +186,11 @@ rast_upsample <- function(rst, to_height = 1440, to_width = 1080,
     }
   }
 
+  # Resampled raster with resolution of 1 (output)
   r <- terra::rast(nrows = to_height, ncols = to_width, res = 1, crs = "",
             xmin = 0, ymin = 0,xmax = to_width, ymax = to_height)
 
+  # Resample raster data
   upsamp_rast <- terra::resample(trr, r, method = method)
   names(upsamp_rast) <- names(rst)
   return(upsamp_rast)
@@ -184,7 +199,7 @@ rast_upsample <- function(rst, to_height = 1440, to_width = 1080,
 
 #' Convert a cimg image object (from imager) to SpatRaster
 #'
-#' Converts an image in `cimg` class format to a `SpatRaster` object, optionally
+#' Converts an RGB image in `cimg` class format to a `SpatRaster` object, optionally
 #' converting pixel values to decimal format. The function creates three separate
 #' raster layers for the red, green, and blue channels of the image. This is useful
 #' for processing or analyzing images in a spatial context using the `terra` package.
@@ -231,3 +246,47 @@ cimg_to_raster <- function(img, as_decimal = FALSE){
 
   return(rst_out)
 }
+
+
+#' Convert SpatRaster to cimg Object
+#'
+#' Transforms a `SpatRaster` object from the `terra` package into a `cimg`
+#' object from the `imager` package. This conversion is useful for image processing
+#' and analysis workflows that require the use of `imager` functions.
+#'
+#' @param x A `SpatRaster` object to be converted.
+#' @param interpolation An integer indicating the interpolation method to use when
+#' rotating the image.Zero (0) for nearest-neighbor interpolation, one (1) for linear.
+#'
+#' @return A `cimg` object corresponding to the input `SpatRaster`.
+#'
+#' @importFrom terra as.array
+#' @importFrom imager as.cimg imrotate mirror
+#'
+#' @export
+#'
+#'
+
+raster_to_cimg <- function(x, interpolation = 0){
+
+  # Check if the object is a SpatRaster
+  if(!inherits(x, "SpatRaster")){
+    stop("x must be a SpatRaster object from terra package")
+  }
+
+  # Convert from SpatRaster to array
+  arr_img <- terra::as.array(x)
+
+  # Use the conversion from array to cimg
+  img <- suppressWarnings(
+    imager::as.cimg(arr_img))
+
+  # Because the array is transposed we need to re-align the image
+  # Rotate 90 degrees
+  img <- imager::imrotate(img, angle = 90, interpolation = interpolation)
+  # Mirror along the x-axis
+  img <- imager::mirror(img, "x")
+
+  return(img)
+}
+
