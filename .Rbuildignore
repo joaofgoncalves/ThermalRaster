@@ -9,3 +9,6 @@ R/_test_main.R
 ^_pkgdown\.yml$
 ^docs$
 ^pkgdown$
+README.pdf
+README.docx
+^_adhoc_tests$
